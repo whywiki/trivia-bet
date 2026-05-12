@@ -1,0 +1,974 @@
+openapi: 3.1.0
+info:
+  title: Trivia Bet
+  version: 1.0.0
+paths:
+  /users/:
+    post:
+      tags:
+      - users
+      summary: Register
+      operationId: register_users__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/me:
+    get:
+      tags:
+      - users
+      summary: Get Me
+      operationId: get_me_users_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+      security:
+      - OAuth2PasswordBearer: []
+    put:
+      tags:
+      - users
+      summary: Update Me
+      operationId: update_me_users_me_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - OAuth2PasswordBearer: []
+    delete:
+      tags:
+      - users
+      summary: Delete Me
+      operationId: delete_me_users_me_delete
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearer: []
+  /users/{user_id}:
+    get:
+      tags:
+      - users
+      summary: Get User
+      operationId: get_user_users__user_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      operationId: login_auth_login_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_login_auth_login_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /questions/:
+    get:
+      tags:
+      - questions
+      summary: List Questions
+      operationId: list_questions_questions__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+          title: Category
+      - name: difficulty
+        in: query
+        required: false
+        schema:
+          type: string
+          title: Difficulty
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionPublic'
+                title: Response List Questions Questions  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - questions
+      summary: Create Question
+      operationId: create_question_questions__post
+      security:
+      - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /questions/{question_id}:
+    get:
+      tags:
+      - questions
+      summary: Get Question
+      operationId: get_question_questions__question_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: question_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Question Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionPublic'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - questions
+      summary: Delete Question
+      operationId: delete_question_questions__question_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: question_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Question Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/:
+    get:
+      tags:
+      - games
+      summary: List Games
+      operationId: list_games_games__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GameResponse'
+                type: array
+                title: Response List Games Games  Get
+      security:
+      - OAuth2PasswordBearer: []
+    post:
+      tags:
+      - games
+      summary: Create Game
+      operationId: create_game_games__post
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+      security:
+      - OAuth2PasswordBearer: []
+  /games/{game_id}:
+    get:
+      tags:
+      - games
+      summary: Get Game
+      operationId: get_game_games__game_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - games
+      summary: Delete Game
+      operationId: delete_game_games__game_id__delete
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/{room_code}/join:
+    put:
+      tags:
+      - games
+      summary: Join Game
+      operationId: join_game_games__room_code__join_put
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: room_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Room Code
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/{game_id}/rounds/:
+    get:
+      tags:
+      - rounds
+      summary: List Rounds
+      operationId: list_rounds_games__game_id__rounds__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoundResponse'
+                title: Response List Rounds Games  Game Id  Rounds  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - rounds
+      summary: Create Round
+      operationId: create_round_games__game_id__rounds__post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/{game_id}/rounds/{round_id}:
+    get:
+      tags:
+      - rounds
+      summary: Get Round
+      operationId: get_round_games__game_id__rounds__round_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      - name: round_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Round Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/{game_id}/rounds/{round_id}/bets/:
+    post:
+      tags:
+      - bets
+      summary: Place Bet
+      operationId: place_bet_games__game_id__rounds__round_id__bets__post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      - name: round_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Round Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BetCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - bets
+      summary: Get Bets
+      operationId: get_bets_games__game_id__rounds__round_id__bets__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      - name: round_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Round Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BetResponse'
+                title: Response Get Bets Games  Game Id  Rounds  Round Id  Bets  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /games/{game_id}/rounds/{round_id}/bets/me:
+    get:
+      tags:
+      - bets
+      summary: Get My Bet
+      operationId: get_my_bet_games__game_id__rounds__round_id__bets_me_get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Game Id
+      - name: round_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Round Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    BetCreate:
+      properties:
+        chosen_answer:
+          type: string
+          title: Chosen Answer
+        bet_amount:
+          type: integer
+          title: Bet Amount
+      type: object
+      required:
+      - chosen_answer
+      - bet_amount
+      title: BetCreate
+    BetResponse:
+      properties:
+        bet_id:
+          type: integer
+          title: Bet Id
+        round_id:
+          type: integer
+          title: Round Id
+        user_id:
+          type: integer
+          title: User Id
+        chosen_answer:
+          type: string
+          title: Chosen Answer
+        bet_amount:
+          type: integer
+          title: Bet Amount
+        is_correct:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Correct
+        payout:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Payout
+        placed_at:
+          type: string
+          format: date-time
+          title: Placed At
+      type: object
+      required:
+      - bet_id
+      - round_id
+      - user_id
+      - chosen_answer
+      - bet_amount
+      - placed_at
+      title: BetResponse
+    Body_login_auth_login_post:
+      properties:
+        grant_type:
+          anyOf:
+          - type: string
+            pattern: ^password$
+          - type: 'null'
+          title: Grant Type
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          format: password
+          title: Password
+        scope:
+          type: string
+          title: Scope
+          default: ''
+        client_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Id
+        client_secret:
+          anyOf:
+          - type: string
+          - type: 'null'
+          format: password
+          title: Client Secret
+      type: object
+      required:
+      - username
+      - password
+      title: Body_login_auth_login_post
+    GameResponse:
+      properties:
+        game_id:
+          type: integer
+          title: Game Id
+        room_code:
+          type: string
+          title: Room Code
+        player_one:
+          type: integer
+          title: Player One
+        player_two:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Player Two
+        status:
+          type: string
+          title: Status
+        winner_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Winner Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        ended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Ended At
+      type: object
+      required:
+      - game_id
+      - room_code
+      - player_one
+      - status
+      - created_at
+      title: GameResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    QuestionCreate:
+      properties:
+        text:
+          type: string
+          title: Text
+        option_a:
+          type: string
+          title: Option A
+        option_b:
+          type: string
+          title: Option B
+        option_c:
+          type: string
+          title: Option C
+        option_d:
+          type: string
+          title: Option D
+        correct_answer:
+          type: string
+          title: Correct Answer
+        category:
+          type: string
+          title: Category
+        difficulty:
+          type: string
+          title: Difficulty
+      type: object
+      required:
+      - text
+      - option_a
+      - option_b
+      - option_c
+      - option_d
+      - correct_answer
+      - category
+      - difficulty
+      title: QuestionCreate
+    QuestionPublic:
+      properties:
+        question_id:
+          type: integer
+          title: Question Id
+        text:
+          type: string
+          title: Text
+        option_a:
+          type: string
+          title: Option A
+        option_b:
+          type: string
+          title: Option B
+        option_c:
+          type: string
+          title: Option C
+        option_d:
+          type: string
+          title: Option D
+        category:
+          type: string
+          title: Category
+        difficulty:
+          type: string
+          title: Difficulty
+      type: object
+      required:
+      - question_id
+      - text
+      - option_a
+      - option_b
+      - option_c
+      - option_d
+      - category
+      - difficulty
+      title: QuestionPublic
+    QuestionResponse:
+      properties:
+        question_id:
+          type: integer
+          title: Question Id
+        text:
+          type: string
+          title: Text
+        option_a:
+          type: string
+          title: Option A
+        option_b:
+          type: string
+          title: Option B
+        option_c:
+          type: string
+          title: Option C
+        option_d:
+          type: string
+          title: Option D
+        correct_answer:
+          type: string
+          title: Correct Answer
+        category:
+          type: string
+          title: Category
+        difficulty:
+          type: string
+          title: Difficulty
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - question_id
+      - text
+      - option_a
+      - option_b
+      - option_c
+      - option_d
+      - correct_answer
+      - category
+      - difficulty
+      - created_at
+      title: QuestionResponse
+    RoundResponse:
+      properties:
+        round_id:
+          type: integer
+          title: Round Id
+        game_id:
+          type: integer
+          title: Game Id
+        question_id:
+          type: integer
+          title: Question Id
+        round_number:
+          type: integer
+          title: Round Number
+        status:
+          type: string
+          title: Status
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        ended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Ended At
+      type: object
+      required:
+      - round_id
+      - game_id
+      - question_id
+      - round_number
+      - status
+      title: RoundResponse
+    Token:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+      type: object
+      required:
+      - access_token
+      - token_type
+      title: Token
+    UserRegister:
+      properties:
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          format: email
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - username
+      - email
+      - password
+      title: UserRegister
+    UserResponse:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        username:
+          type: string
+          title: Username
+        email:
+          type: string
+          title: Email
+        balance:
+          type: integer
+          title: Balance
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - user_id
+      - username
+      - email
+      - balance
+      - created_at
+      title: UserResponse
+    UserUpdate:
+      properties:
+        username:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Username
+        email:
+          anyOf:
+          - type: string
+            format: email
+          - type: 'null'
+          title: Email
+      type: object
+      title: UserUpdate
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /auth/login

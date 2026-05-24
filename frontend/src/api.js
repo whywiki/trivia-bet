@@ -4,10 +4,10 @@ function getToken() {
   return sessionStorage.getItem("token");
 }
 
-function authHeaders() {
+function authHeaders(token) {
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${getToken()}`,
+    Authorization: `Bearer ${token || getToken()}`,
   };
 }
 
@@ -31,9 +31,9 @@ export async function login(username, password) {
   return res.json();
 }
 
-export async function getMe() {
+export async function getMe(token) {
   const res = await fetch(`${BASE_URL}/users/me`, {
-    headers: authHeaders(),
+    headers: authHeaders(token),
   });
   if (!res.ok) throw await res.json();
   return res.json();

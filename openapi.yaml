@@ -42,7 +42,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserResponse'
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
     put:
       tags:
       - users
@@ -68,7 +68,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
     delete:
       tags:
       - users
@@ -78,7 +78,7 @@ paths:
         '204':
           description: Successful Response
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
   /users/{user_id}:
     get:
       tags:
@@ -86,7 +86,7 @@ paths:
       summary: Get User
       operationId: get_user_users__user_id__get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: user_id
         in: path
@@ -115,9 +115,9 @@ paths:
       operationId: login_auth_login_post
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/Body_login_auth_login_post'
+              $ref: '#/components/schemas/LoginRequest'
         required: true
       responses:
         '200':
@@ -139,7 +139,7 @@ paths:
       summary: List Questions
       operationId: list_questions_questions__get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: category
         in: query
@@ -175,7 +175,7 @@ paths:
       summary: Create Question
       operationId: create_question_questions__post
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
@@ -189,57 +189,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QuestionResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /questions/{question_id}:
-    get:
-      tags:
-      - questions
-      summary: Get Question
-      operationId: get_question_questions__question_id__get
-      security:
-      - OAuth2PasswordBearer: []
-      parameters:
-      - name: question_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Question Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QuestionPublic'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - questions
-      summary: Delete Question
-      operationId: delete_question_questions__question_id__delete
-      security:
-      - OAuth2PasswordBearer: []
-      parameters:
-      - name: question_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Question Id
-      responses:
-        '204':
-          description: Successful Response
         '422':
           description: Validation Error
           content:
@@ -263,7 +212,7 @@ paths:
                 type: array
                 title: Response List Games Games  Get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
     post:
       tags:
       - games
@@ -277,7 +226,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GameResponse'
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
   /games/{game_id}:
     get:
       tags:
@@ -285,7 +234,7 @@ paths:
       summary: Get Game
       operationId: get_game_games__game_id__get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -312,7 +261,7 @@ paths:
       summary: Delete Game
       operationId: delete_game_games__game_id__delete
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -336,7 +285,7 @@ paths:
       summary: Join Game
       operationId: join_game_games__room_code__join_put
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: room_code
         in: path
@@ -364,7 +313,7 @@ paths:
       summary: List Rounds
       operationId: list_rounds_games__game_id__rounds__get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -394,7 +343,7 @@ paths:
       summary: Create Round
       operationId: create_round_games__game_id__rounds__post
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -415,40 +364,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /games/{game_id}/rounds/{round_id}:
-    get:
-      tags:
-      - rounds
-      summary: Get Round
-      operationId: get_round_games__game_id__rounds__round_id__get
-      security:
-      - OAuth2PasswordBearer: []
-      parameters:
-      - name: game_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Game Id
-      - name: round_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Round Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RoundResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /games/{game_id}/rounds/{round_id}/bets/:
     post:
       tags:
@@ -456,7 +371,7 @@ paths:
       summary: Place Bet
       operationId: place_bet_games__game_id__rounds__round_id__bets__post
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -495,7 +410,7 @@ paths:
       summary: Get Bets
       operationId: get_bets_games__game_id__rounds__round_id__bets__get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -532,7 +447,7 @@ paths:
       summary: Get My Bet
       operationId: get_my_bet_games__game_id__rounds__round_id__bets_me_get
       security:
-      - OAuth2PasswordBearer: []
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
@@ -624,41 +539,6 @@ components:
       - bet_amount
       - placed_at
       title: BetResponse
-    Body_login_auth_login_post:
-      properties:
-        grant_type:
-          anyOf:
-          - type: string
-            pattern: ^password$
-          - type: 'null'
-          title: Grant Type
-        username:
-          type: string
-          title: Username
-        password:
-          type: string
-          format: password
-          title: Password
-        scope:
-          type: string
-          title: Scope
-          default: ''
-        client_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Client Id
-        client_secret:
-          anyOf:
-          - type: string
-          - type: 'null'
-          format: password
-          title: Client Secret
-      type: object
-      required:
-      - username
-      - password
-      title: Body_login_auth_login_post
     GameResponse:
       properties:
         game_id:
@@ -710,6 +590,19 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    LoginRequest:
+      properties:
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - username
+      - password
+      title: LoginRequest
     QuestionCreate:
       properties:
         text:
@@ -966,9 +859,6 @@ components:
       - type
       title: ValidationError
   securitySchemes:
-    OAuth2PasswordBearer:
-      type: oauth2
-      flows:
-        password:
-          scopes: {}
-          tokenUrl: /auth/login
+    HTTPBearer:
+      type: http
+      scheme: bearer

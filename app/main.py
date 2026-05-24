@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.database import engine
-from app.models import User, Question, Game, Round, Bet
+from app.models import User, Question, Game, Round, Bet, GamePlayer
 from app.database import Base
 from app.routers import users, auth, questions, games, rounds, bets
 

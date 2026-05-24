@@ -75,21 +75,3 @@ def create_round(
     db.commit()
     db.refresh(new_round)
     return new_round
-
-@router.get("/{round_id}", response_model=RoundResponse)
-def get_round(
-    game_id: int,
-    round_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    game = get_game_or_404(game_id, db)
-    check_player_in_game(game, current_user.user_id)
-
-    round_ = db.query(Round).filter(
-        Round.round_id == round_id,
-        Round.game_id == game_id
-    ).first()
-    if not round_:
-        raise HTTPException(status_code=404, detail="Round not found")
-    return round_

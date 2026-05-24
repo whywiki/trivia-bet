@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
@@ -34,26 +34,3 @@ def create_question(
     db.commit()
     db.refresh(new_question)
     return new_question
-
-@router.get("/{question_id}", response_model=QuestionPublic)
-def get_question(
-    question_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    question = db.query(Question).filter(Question.question_id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    return question
-
-@router.delete("/{question_id}", status_code=204)
-def delete_question(
-    question_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    question = db.query(Question).filter(Question.question_id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    db.delete(question)
-    db.commit()

@@ -8,6 +8,7 @@ from app.models.round import Round
 from app.models.game import Game
 from app.models.question import Question
 from app.models.user import User
+from app.models.player import GamePlayer
 from app.schemas.bet import BetCreate, BetResponse
 from app.auth import get_current_user
 
@@ -32,6 +33,15 @@ def check_player_in_game(game: Game, user_id: int):
     if game.player_one != user_id and game.player_two != user_id:
         raise HTTPException(status_code=403, detail="You are not a participant in this game")
 
+def get_game_player_or_404(game_id: int, user_id: int, db: Session) -> GamePlayer:
+    gp = db.query(GamePlayer).filter(
+        GamePlayer.game_id == game_id,
+        GamePlayer.user_id == user_id
+    ).first()
+    if not gp:
+        raise HTTPException(status_code=404, detail="Player not found in this game")
+    return gp
+
 @router.post("/", response_model=BetResponse, status_code=201)
 def place_bet(
     game_id: int,
@@ -54,7 +64,9 @@ def place_bet(
     if existing_bet:
         raise HTTPException(status_code=409, detail="You already placed a bet this round")
 
-    if bet.bet_amount > current_user.balance:
+    game_player = get_game_player_or_404(game_id, current_user.user_id, db)
+
+    if bet.bet_amount > game_player.balance:
         raise HTTPException(status_code=409, detail="Insufficient balance")
 
     question = db.query(Question).filter(Question.question_id == round_.question_id).first()
@@ -72,22 +84,28 @@ def place_bet(
     )
     db.add(new_bet)
 
-    current_user.balance += payout
-    if current_user.balance < 0:
-        current_user.balance = 0
+    game_player.balance += payout
+    if game_player.balance < 0:
+        game_player.balance = 0
 
     bets_this_round = db.query(Bet).filter(Bet.round_id == round_id).count()
     if bets_this_round + 1 == 2:
         round_.status = "finished"
         round_.ended_at = datetime.utcnow()
 
-        p1_balance = db.query(User).filter(User.user_id == game.player_one).first().balance
-        p2_balance = db.query(User).filter(User.user_id == game.player_two).first().balance
+        p1 = db.query(GamePlayer).filter(
+            GamePlayer.game_id == game_id,
+            GamePlayer.user_id == game.player_one
+        ).first()
+        p2 = db.query(GamePlayer).filter(
+            GamePlayer.game_id == game_id,
+            GamePlayer.user_id == game.player_two
+        ).first()
 
-        if p1_balance == 0 or p2_balance == 0:
+        if p1.balance == 0 or p2.balance == 0:
             game.status = "finished"
             game.ended_at = datetime.utcnow()
-            game.winner_id = game.player_one if p2_balance == 0 else game.player_two
+            game.winner_id = game.player_one if p2.balance == 0 else game.player_two
 
     db.commit()
     db.refresh(new_bet)
@@ -103,7 +121,6 @@ def get_bets(
     game = get_game_or_404(game_id, db)
     check_player_in_game(game, current_user.user_id)
     get_round_or_404(round_id, game_id, db)
-
     return db.query(Bet).filter(Bet.round_id == round_id).all()
 
 @router.get("/me", response_model=BetResponse)

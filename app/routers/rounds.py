@@ -9,6 +9,7 @@ from app.models.question import Question
 from app.schemas.round import RoundResponse
 from app.auth import get_current_user
 from app.models.user import User
+from app.websocket_manager import manager
 import random
 
 router = APIRouter(prefix="/games/{game_id}/rounds", tags=["rounds"])
@@ -34,7 +35,7 @@ def list_rounds(
     return db.query(Round).filter(Round.game_id == game_id).order_by(Round.round_number).all()
 
 @router.post("/", response_model=RoundResponse, status_code=201)
-def create_round(
+async def create_round(
     game_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -74,4 +75,21 @@ def create_round(
     db.add(new_round)
     db.commit()
     db.refresh(new_round)
+
+    await manager.broadcast(game_id, {
+        "event": "round_started",
+        "round_id": new_round.round_id,
+        "round_number": new_round.round_number,
+        "question": {
+            "question_id": question.question_id,
+            "text": question.text,
+            "option_a": question.option_a,
+            "option_b": question.option_b,
+            "option_c": question.option_c,
+            "option_d": question.option_d,
+            "category": question.category,
+            "difficulty": question.difficulty
+        }
+    })
+
     return new_round

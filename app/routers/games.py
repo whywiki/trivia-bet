@@ -9,6 +9,7 @@ from app.models.player import GamePlayer
 from app.schemas.game import GameCreate, GameResponse
 from app.auth import get_current_user
 from app.models.user import User
+from app.websocket_manager import manager
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -71,7 +72,7 @@ def get_game(
     return game
 
 @router.put("/{room_code}/join", response_model=GameResponse)
-def join_game(
+async def join_game(
     room_code: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -99,6 +100,13 @@ def join_game(
     db.add(game_player)
     db.commit()
     db.refresh(game)
+
+    await manager.broadcast(game.game_id, {
+        "event": "player_joined",
+        "user_id": current_user.user_id,
+        "username": current_user.username
+    })
+
     return game
 
 @router.delete("/{game_id}", status_code=204)

@@ -11,6 +11,7 @@ from app.models.user import User
 from app.models.player import GamePlayer
 from app.schemas.bet import BetCreate, BetResponse
 from app.auth import get_current_user
+from app.websocket_manager import manager
 
 router = APIRouter(prefix="/games/{game_id}/rounds/{round_id}/bets", tags=["bets"])
 
@@ -43,7 +44,7 @@ def get_game_player_or_404(game_id: int, user_id: int, db: Session) -> GamePlaye
     return gp
 
 @router.post("/", response_model=BetResponse, status_code=201)
-def place_bet(
+async def place_bet(
     game_id: int,
     round_id: int,
     bet: BetCreate,
@@ -89,7 +90,9 @@ def place_bet(
         game_player.balance = 0
 
     bets_this_round = db.query(Bet).filter(Bet.round_id == round_id).count()
-    if bets_this_round + 1 == 2:
+    both_bet = bets_this_round + 1 == 2
+
+    if both_bet:
         round_.status = "finished"
         round_.ended_at = datetime.utcnow()
 
@@ -102,13 +105,46 @@ def place_bet(
             GamePlayer.user_id == game.player_two
         ).first()
 
-        if p1.balance == 0 or p2.balance == 0:
+        game_over = p1.balance == 0 or p2.balance == 0
+        if game_over:
             game.status = "finished"
             game.ended_at = datetime.utcnow()
             game.winner_id = game.player_one if p2.balance == 0 else game.player_two
 
     db.commit()
     db.refresh(new_bet)
+
+    await manager.broadcast(game_id, {
+        "event": "bet_placed",
+        "user_id": current_user.user_id
+    })
+
+    if both_bet:
+        p1 = db.query(GamePlayer).filter(
+            GamePlayer.game_id == game_id,
+            GamePlayer.user_id == game.player_one
+        ).first()
+        p2 = db.query(GamePlayer).filter(
+            GamePlayer.game_id == game_id,
+            GamePlayer.user_id == game.player_two
+        ).first()
+
+        await manager.broadcast(game_id, {
+            "event": "round_finished",
+            "round_id": round_id,
+            "correct_answer": question.correct_answer,
+            "balances": {
+                str(game.player_one): p1.balance,
+                str(game.player_two): p2.balance
+            }
+        })
+
+        if game.status == "finished":
+            await manager.broadcast(game_id, {
+                "event": "game_over",
+                "winner_id": game.winner_id
+            })
+
     return new_bet
 
 @router.get("/", response_model=List[BetResponse])

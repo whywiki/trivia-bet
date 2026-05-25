@@ -35,10 +35,14 @@ export default function Game() {
             try {
                 const g = await getGame(gameId);
                 setGame(g);
+                if (g.status === "active") {
+                    setStatus("ready");
+                }
             } catch (e) {
                 setError("Failed to load game");
             }
         }
+
         loadGame();
 
         connectSocket(gameId, token, handleSocketEvent);

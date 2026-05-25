@@ -1,38 +1,70 @@
 # Trivia Bet
 
-A two-player trivia game where players bet tokens on their answers. Last player with tokens wins.
+A real-time two-player trivia betting game. Players answer questions and bet tokens on their answers. Last player standing wins.
 
-## Tech stack
+## Tech Stack
 
+**Backend**
 - FastAPI
-- SQLite
-- SQLAlchemy
+- SQLite + SQLAlchemy
+- JWT authentication
+- WebSockets for real-time sync
+
+**Frontend**
+- React + Vite
+
+**Infrastructure**
+- Docker
+- Nginx reverse proxy
 
 ## Setup
+
+### With Docker (recommended)
 
 ```bash
 git clone https://github.com/whywiki/trivia-bet.git
 cd trivia-bet
+docker compose up --build
+```
+
+Open `http://localhost` in two browser tabs or on two machines on the same network.
+
+### Local development
+
+**Backend**
+```bash
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-## Run
-
-```bash
 python seed.py
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs available at `http://localhost:8000/docs`
+**Frontend**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## How it works
+## How to play
 
-1. Two players register and login
-2. Player 1 creates a game and shares the room code
-3. Player 2 joins using the room code
-4. Each round a random question is picked
-5. Both players pick an answer and bet tokens
-6. Correct answer wins the tokens, wrong answer loses them
-7. Game ends when someone runs out of tokens
+1. Register an account on each device
+2. Player 1 clicks **Create Game** and shares the room code
+3. Player 2 enters the room code and clicks **Join**
+4. Player 1 clicks **Start Round** — both players see the same question
+5. Each player picks an answer and bets tokens
+6. Correct answer wins the bet, wrong answer loses it
+7. First player to reach 0 tokens loses
+
+## API
+
+Interactive docs available at `http://localhost:8000/docs`
+
+## LAN play
+
+Start the server on one machine, then on other devices on the same network open:
+
+```
+http://<host-machine-ip>
+```

@@ -2,11 +2,21 @@ import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
 
+function loadUser() {
+    try {
+        const raw = sessionStorage.getItem("user");
+        if (!raw || raw === "null" || raw === "undefined") return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.user_id) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
 export function AuthProvider({ children }) {
     const [token, setToken] = useState(sessionStorage.getItem("token") || null);
-    const [user, setUser] = useState(
-        JSON.parse(sessionStorage.getItem("user") || "null")
-    );
+    const [user, setUser] = useState(loadUser());
 
     function saveAuth(token, user) {
         sessionStorage.setItem("token", token);

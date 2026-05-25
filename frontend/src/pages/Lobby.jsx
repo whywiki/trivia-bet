@@ -2,32 +2,78 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createGame, joinGame, getMe } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { Coins, LogOut, Copy, Check } from "lucide-react";
+import { Coins, LogOut, Copy, Check, Users } from "lucide-react";
+import { connectSocket, disconnectSocket } from "../socket";
+
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+async function cancelWaitingGames(token) {
+    try {
+        const res = await fetch(`${BASE_URL}/games/`, {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (!res.ok) return;
+        const games = await res.json();
+        for (const game of games) {
+            if (game.status === "waiting") {
+                await fetch(`${BASE_URL}/games/${game.game_id}`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+}
 
 export default function Lobby() {
     const { user, token, saveAuth, clearAuth } = useAuth();
     const navigate = useNavigate();
 
-    const [mode, setMode] = useState(null); // "create" | "join"
+    const [mode, setMode] = useState(null);
     const [roomCode, setRoomCode] = useState("");
     const [joinCode, setJoinCode] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [gameId, setGameId] = useState(null);
+    const [opponentJoined, setOpponentJoined] = useState(false);
 
     useEffect(() => {
-        async function refreshUser() {
+        async function init() {
             try {
                 const fresh = await getMe();
                 saveAuth(token, fresh);
+                await cancelWaitingGames(token);
             } catch (e) {
                 clearAuth();
                 navigate("/");
             }
         }
-        refreshUser();
+        init();
     }, []);
+
+    useEffect(() => {
+        if (!gameId || !token) return;
+
+        connectSocket(gameId, token, (data) => {
+            if (data.event === "player_joined") {
+                setOpponentJoined(true);
+                disconnectSocket();
+                navigate("/game", { state: { gameId, isPlayerOne: true } });
+            }
+        });
+
+        return () => {
+            disconnectSocket();
+        };
+    }, [gameId, token]);
 
     async function handleCreate() {
         setError(null);
@@ -58,6 +104,14 @@ export default function Lobby() {
         }
     }
 
+    async function handleCancel() {
+        disconnectSocket();
+        await cancelWaitingGames(token);
+        setMode(null);
+        setRoomCode("");
+        setGameId(null);
+    }
+
     function handleCopy() {
         navigator.clipboard.writeText(roomCode);
         setCopied(true);
@@ -65,6 +119,7 @@ export default function Lobby() {
     }
 
     function handleLogout() {
+        disconnectSocket();
         clearAuth();
         navigate("/");
     }
@@ -153,36 +208,20 @@ export default function Lobby() {
                             {copied ? <Check size={14} /> : <Copy size={14} />}
                             {copied ? "Copied" : "Copy code"}
                         </button>
-                        <p className="waiting-text">Waiting for opponent to join...</p>
+                        {opponentJoined ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", marginTop: "12px", color: "var(--success)" }}>
+                                <Users size={16} />
+                                Opponent joined — entering game...
+                            </div>
+                        ) : (
+                            <p className="waiting-text">Waiting for opponent to join...</p>
+                        )}
                         <button
-                            className="btn-primary"
+                            className="btn-secondary"
+                            onClick={handleCancel}
                             style={{ marginTop: "16px" }}
-                            onClick={() =>
-                                navigate("/game", {
-                                    state: { gameId, isPlayerOne: true },
-                                })
-                            }
                         >
-                            Go to Game Room
-                        </button>
-                    </div>
-                )}
-
-                {mode === "join" && (
-                    <div className="join-row">
-                        <input
-                            type="text"
-                            placeholder="Enter room code"
-                            value={joinCode}
-                            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                            maxLength={6}
-                        />
-                        <button
-                            className="btn-primary"
-                            onClick={handleJoin}
-                            disabled={loading || !joinCode.trim()}
-                        >
-                            Join
+                            Cancel
                         </button>
                     </div>
                 )}

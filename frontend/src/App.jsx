@@ -6,8 +6,8 @@ import Game from "./pages/Game";
 import GameOver from "./pages/GameOver";
 
 function ProtectedRoute({ children }) {
-    const { token } = useAuth();
-    if (!token) return <Navigate to="/" />;
+    const { token, user } = useAuth();
+    if (!token || !user) return <Navigate to="/" />;
     return children;
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { createRound, placeBet, getGame } from "../api";
+import { createRound, placeBet, getGame, getUser } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { connectSocket, disconnectSocket } from "../socket";
 import { Coins, Circle, CheckCircle, XCircle } from "lucide-react";
@@ -13,6 +13,7 @@ export default function Game() {
     const { gameId, isPlayerOne } = location.state || {};
 
     const [game, setGame] = useState(null);
+    const [opponentUsername, setOpponentUsername] = useState("Opponent");
     const [question, setQuestion] = useState(null);
     const [roundId, setRoundId] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -37,12 +38,16 @@ export default function Game() {
                 setGame(g);
                 if (g.status === "active") {
                     setStatus("ready");
+                    const opponentId = g.player_one === myUserId ? g.player_two : g.player_one;
+                    if (opponentId) {
+                        const opp = await getUser(opponentId);
+                        setOpponentUsername(opp.username);
+                    }
                 }
             } catch (e) {
                 setError("Failed to load game");
             }
         }
-
         loadGame();
 
         connectSocket(gameId, token, handleSocketEvent);
@@ -56,6 +61,7 @@ export default function Game() {
         switch (data.event) {
             case "player_joined":
                 setStatus("ready");
+                setOpponentUsername(data.username);
                 break;
 
             case "round_started":
@@ -92,8 +98,16 @@ export default function Game() {
                         winnerId: data.winner_id,
                         myUserId,
                         username: user?.username,
+                        opponentUsername,
                     },
                 });
+                break;
+
+            case "player_disconnected":
+                if (data.user_id !== myUserId && (status === "playing" || status === "finished")) {
+                    setError(`${opponentUsername} disconnected.`);
+                    setStatus("disconnected");
+                }
                 break;
 
             default:
@@ -154,11 +168,11 @@ export default function Game() {
                     <div className="balances">
                         <div className="player-balance you">
                             <Coins size={14} />
-                            You: {myBalance}
+                            {user?.username}: {myBalance}
                         </div>
                         <div className="player-balance opponent">
                             <Coins size={14} />
-                            Opp: {opponentBalance}
+                            {opponentUsername}: {opponentBalance}
                         </div>
                     </div>
                 </div>
@@ -175,6 +189,14 @@ export default function Game() {
                     </div>
                 )}
 
+                {status === "disconnected" && (
+                    <div style={{ textAlign: "center", marginTop: "16px" }}>
+                        <button className="btn-primary" onClick={() => navigate("/lobby")}>
+                            Back to Lobby
+                        </button>
+                    </div>
+                )}
+
                 {(status === "ready" || status === "finished") && isPlayerOne && (
                     <button
                         className="btn-primary"
@@ -188,7 +210,7 @@ export default function Game() {
 
                 {(status === "ready" || status === "finished") && !isPlayerOne && (
                     <div className="status-box">
-                        Waiting for Player 1 to start the round...
+                        Waiting for {opponentUsername} to start the round...
                     </div>
                 )}
 
@@ -218,7 +240,7 @@ export default function Game() {
 
                         {!betPlaced && (
                             <div className="bet-row">
-                                <label>Bet amount</label>
+                                <label>Bet</label>
                                 <input
                                     type="number"
                                     min={1}
@@ -226,6 +248,13 @@ export default function Game() {
                                     value={betAmount}
                                     onChange={(e) => setBetAmount(parseInt(e.target.value))}
                                 />
+                                <button
+                                    className="btn-secondary"
+                                    style={{ width: "auto", padding: "10px 16px" }}
+                                    onClick={() => setBetAmount(myBalance)}
+                                >
+                                    All in
+                                </button>
                                 <button
                                     className="btn-primary"
                                     onClick={handlePlaceBet}
@@ -249,7 +278,7 @@ export default function Game() {
                                         ) : (
                                             <Circle size={16} color="var(--text-muted)" />
                                         )}
-                                        Opponent {opponentBet ? "has bet" : "thinking..."}
+                                        {opponentUsername} {opponentBet ? "has bet" : "thinking..."}
                                     </div>
                                 </div>
                             </div>
@@ -277,17 +306,15 @@ export default function Game() {
                         </h3>
                         <div className="result-balances">
                             <div
-                                className={`result-player ${myBalance > opponentBalance ? "winner" : "loser"
-                                    }`}
+                                className={`result-player ${myBalance >= opponentBalance ? "winner" : "loser"}`}
                             >
-                                <div className="name">You</div>
+                                <div className="name">{user?.username}</div>
                                 <div className="amount">{myBalance}</div>
                             </div>
                             <div
-                                className={`result-player ${opponentBalance > myBalance ? "winner" : "loser"
-                                    }`}
+                                className={`result-player ${opponentBalance > myBalance ? "winner" : "loser"}`}
                             >
-                                <div className="name">Opponent</div>
+                                <div className="name">{opponentUsername}</div>
                                 <div className="amount">{opponentBalance}</div>
                             </div>
                         </div>

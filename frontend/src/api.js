@@ -39,6 +39,14 @@ export async function getMe(token) {
   return res.json();
 }
 
+export async function getUser(userId) {
+  const res = await fetch(`${BASE_URL}/users/${userId}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
 export async function createGame() {
   const res = await fetch(`${BASE_URL}/games/`, {
     method: "POST",

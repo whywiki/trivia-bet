@@ -1,5 +1,8 @@
-from app.database import SessionLocal
-from app.models.question import Question
+from app.database import SessionLocal, engine
+from app.models import User, Question, Game, Round, Bet, GamePlayer
+from app.database import Base
+
+Base.metadata.create_all(bind=engine)
 
 questions = [
     {

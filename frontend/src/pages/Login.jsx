@@ -1,123 +1,186 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, register, getMe } from "../api";
+import { createGame, joinGame, getMe } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { Coins, LogOut, Copy, Check, Users } from "lucide-react";
+import { connectSocket, disconnectSocket } from "../socket";
 
-export default function Login() {
-    const [tab, setTab] = useState("login");
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-
-    const { saveAuth } = useAuth();
+export default function Lobby() {
+    const { user, token, saveAuth, clearAuth } = useAuth();
     const navigate = useNavigate();
 
-    async function handleLogin(e) {
-        e.preventDefault();
+    const [mode, setMode] = useState(null);
+    const [roomCode, setRoomCode] = useState("");
+    const [joinCode, setJoinCode] = useState("");
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [gameId, setGameId] = useState(null);
+    const [opponentJoined, setOpponentJoined] = useState(false);
+
+    useEffect(() => {
+        async function refreshUser() {
+            try {
+                const fresh = await getMe();
+                saveAuth(token, fresh);
+            } catch (e) {
+                clearAuth();
+                navigate("/");
+            }
+        }
+        refreshUser();
+    }, []);
+
+    useEffect(() => {
+        if (!gameId || !token) return;
+
+        connectSocket(gameId, token, (data) => {
+            if (data.event === "player_joined") {
+                setOpponentJoined(true);
+                disconnectSocket();
+                navigate("/game", { state: { gameId, isPlayerOne: true } });
+            }
+        });
+
+        return () => {
+            disconnectSocket();
+        };
+    }, [gameId, token]);
+
+    async function handleCreate() {
         setError(null);
         setLoading(true);
         try {
-            const data = await login(username, password);
-            const user = await getMe(data.access_token);
-            saveAuth(data.access_token, user);
-            navigate("/lobby");
+            const game = await createGame();
+            setRoomCode(game.room_code);
+            setGameId(game.game_id);
+            setMode("create");
         } catch (err) {
-            setError(err.detail || "Login failed");
+            setError(err.detail || "Failed to create game");
         } finally {
             setLoading(false);
         }
     }
 
-    async function handleRegister(e) {
-        e.preventDefault();
+    async function handleJoin() {
+        if (!joinCode.trim()) return;
         setError(null);
         setLoading(true);
         try {
-            await register(username, email, password);
-            const data = await login(username, password);
-            const user = await getMe(data.access_token);
-            saveAuth(data.access_token, user);
-            navigate("/lobby");
+            const game = await joinGame(joinCode.trim().toUpperCase());
+            navigate("/game", { state: { gameId: game.game_id, isPlayerOne: false } });
         } catch (err) {
-            setError(err.detail || "Registration failed");
+            setError(err.detail || "Failed to join game");
         } finally {
             setLoading(false);
         }
+    }
+
+    function handleCopy() {
+        navigator.clipboard.writeText(roomCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
+    function handleLogout() {
+        clearAuth();
+        navigate("/");
     }
 
     return (
-        <div className="auth-container">
-            <div className="auth-card">
-                <h1 className="auth-title">Trivia Bet</h1>
-                <p className="auth-subtitle">Answer questions. Win tokens. Destroy your friend.</p>
-
-                <div className="tab-row">
-                    <button
-                        className={`tab-btn ${tab === "login" ? "active" : ""}`}
-                        onClick={() => { setTab("login"); setError(null); }}
-                    >
-                        <LogIn size={16} />
-                        Login
-                    </button>
-                    <button
-                        className={`tab-btn ${tab === "register" ? "active" : ""}`}
-                        onClick={() => { setTab("register"); setError(null); }}
-                    >
-                        <UserPlus size={16} />
-                        Register
-                    </button>
+        <div className="lobby-container">
+            <div className="lobby-card">
+                <div className="lobby-header">
+                    <h2>Welcome, {user?.username}</h2>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div className="balance-badge">
+                            <Coins size={14} />
+                            {user?.balance}
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                background: "none",
+                                border: "none",
+                                color: "var(--text-muted)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            <LogOut size={18} />
+                        </button>
+                    </div>
                 </div>
 
-                <form onSubmit={tab === "login" ? handleLogin : handleRegister}>
-                    <div className="field">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter username"
-                            required
-                        />
+                {error && (
+                    <div className="error-box" style={{ marginBottom: "16px" }}>
+                        {error}
                     </div>
+                )}
 
-                    {tab === "register" && (
-                        <div className="field">
-                            <label>Email</label>
+                {!mode && (
+                    <div className="lobby-actions">
+                        <button
+                            className="btn-primary"
+                            onClick={handleCreate}
+                            disabled={loading}
+                        >
+                            Create Game
+                        </button>
+                        <div className="divider">or</div>
+                        <div className="join-row">
                             <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter email"
-                                required
+                                type="text"
+                                placeholder="Enter room code"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                maxLength={6}
                             />
+                            <button
+                                className="btn-primary"
+                                onClick={handleJoin}
+                                disabled={loading || !joinCode.trim()}
+                            >
+                                Join
+                            </button>
                         </div>
-                    )}
-
-                    <div className="field">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
-                            required
-                        />
                     </div>
+                )}
 
-                    {error && (
-                        <div className="error-box">
-                            <AlertCircle size={16} />
-                            {error}
-                        </div>
-                    )}
-
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        {loading ? "Please wait..." : tab === "login" ? "Login" : "Create Account"}
-                    </button>
-                </form>
+                {mode === "create" && roomCode && (
+                    <div className="room-code-display">
+                        <p>Share this code with your opponent</p>
+                        <div className="room-code">{roomCode}</div>
+                        <button
+                            onClick={handleCopy}
+                            style={{
+                                marginTop: "12px",
+                                background: "none",
+                                border: "1px solid var(--border)",
+                                borderRadius: "var(--radius)",
+                                color: "var(--text-muted)",
+                                padding: "6px 14px",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "13px",
+                            }}
+                        >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                            {copied ? "Copied" : "Copy code"}
+                        </button>
+                        {opponentJoined ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", marginTop: "12px", color: "var(--success)" }}>
+                                <Users size={16} />
+                                Opponent joined — entering game...
+                            </div>
+                        ) : (
+                            <p className="waiting-text">Waiting for opponent to join...</p>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

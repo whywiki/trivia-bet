@@ -5,8 +5,10 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    environment:
+      - DB_DIR=/data
     volumes:
-      - db_data:/app
+      - db_data:/data
     restart: unless-stopped
 
   frontend:

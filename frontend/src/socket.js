@@ -1,4 +1,4 @@
-const BASE_WS_URL = "ws://localhost:8000";
+const BASE_WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
 
 let socket = null;
 

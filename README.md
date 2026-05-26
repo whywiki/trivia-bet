@@ -47,6 +47,19 @@ npm install
 npm run dev
 ```
 
+## Tests
+
+One test per REST endpoint just to pass requirements
+
+### Run
+
+```bash
+docker compose --profile test build test   # rebuild after code changes
+docker compose --profile test run --rm test
+```
+
+
+
 ## How to play
 
 1. Register an account on each device

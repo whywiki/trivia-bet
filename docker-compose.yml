@@ -21,5 +21,15 @@ services:
       - backend
     restart: unless-stopped
 
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      - DB_DIR=/tmp
+    command: pytest -v
+    profiles:
+      - test
+
 volumes:
   db_data:

@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    platform: linux/amd64
     ports:
       - "8000:8000"
     environment:
@@ -15,6 +16,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
+    platform: linux/amd64
     ports:
       - "80:80"
     depends_on:
@@ -25,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    platform: linux/amd64
     environment:
       - DB_DIR=/tmp
     command: pytest -v

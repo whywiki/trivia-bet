@@ -26,8 +26,30 @@ export default function Game() {
     const [status, setStatus] = useState("waiting");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(null);
+    const [roundNumber, setRoundNumber] = useState(null);
+    const timerRef = useRef(null);
 
     const myUserId = user?.user_id;
+
+    // Start countdown when a new round begins (timeLeft resets to 10)
+    useEffect(() => {
+        if (timeLeft === null) return;
+        clearInterval(timerRef.current);
+        if (timeLeft <= 0) return;
+
+        timerRef.current = setInterval(() => {
+            setTimeLeft(t => {
+                if (t <= 1) {
+                    clearInterval(timerRef.current);
+                    return 0;
+                }
+                return t - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerRef.current);
+    }, [timeLeft === 10]); // only re-run when round resets to 10
 
     useEffect(() => {
         if (!gameId || !token) return;
@@ -67,12 +89,14 @@ export default function Game() {
             case "round_started":
                 setQuestion(data.question);
                 setRoundId(data.round_id);
+                setRoundNumber(data.round_number);
                 setSelectedAnswer(null);
                 setBetPlaced(false);
                 setOpponentBet(false);
                 setResult(null);
                 setError(null);
                 setStatus("playing");
+                setTimeLeft(10); // starts the countdown
                 break;
 
             case "bet_placed":
@@ -83,6 +107,8 @@ export default function Game() {
 
             case "round_finished":
                 setResult(data);
+                clearInterval(timerRef.current);
+                setTimeLeft(null);
                 const myBal = data.balances[String(myUserId)];
                 const oppId = Object.keys(data.balances).find(
                     (id) => parseInt(id) !== myUserId
@@ -99,6 +125,7 @@ export default function Game() {
                         myUserId,
                         username: user?.username,
                         opponentUsername,
+                        reason: data.reason,
                     },
                 });
                 break;
@@ -155,8 +182,7 @@ export default function Game() {
             return selectedAnswer === key ? "option-btn selected" : "option-btn";
         }
         if (key === result.correct_answer) return "option-btn correct";
-        if (key === selectedAnswer && key !== result.correct_answer)
-            return "option-btn wrong";
+        if (key === selectedAnswer && key !== result.correct_answer) return "option-btn wrong";
         return "option-btn";
     }
 
@@ -165,6 +191,27 @@ export default function Game() {
             <div className="game-card">
                 <div className="game-header">
                     <h2>Game Room</h2>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                        {roundNumber && (
+                            <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>
+                                Round {roundNumber}/10
+                            </div>
+                        )}
+                        {timeLeft !== null && status === "playing" && (
+                            <div style={{
+                                fontSize: 22,
+                                fontWeight: 800,
+                                minWidth: 36,
+                                textAlign: "center",
+                                color: timeLeft <= 3 ? "var(--danger)" : timeLeft <= 5 ? "#f59e0b" : "var(--text)",
+                                transition: "color 0.3s",
+                            }}>
+                                {timeLeft}s
+                            </div>
+                        )}
+                    </div>
+
                     <div className="balances">
                         <div className="player-balance you">
                             <Coins size={14} />
@@ -191,8 +238,8 @@ export default function Game() {
 
                 {status === "disconnected" && (
                     <div style={{ textAlign: "center", marginTop: "16px" }}>
-                        <button className="btn-primary" onClick={() => navigate("/lobby")}>
-                            Back to Lobby
+                        <button className="btn-primary" onClick={() => navigate("/dashboard")}>
+                            Back to Dashboard
                         </button>
                     </div>
                 )}
@@ -230,7 +277,7 @@ export default function Game() {
                                     key={opt.key}
                                     className={getOptionClass(opt.key)}
                                     onClick={() => !betPlaced && setSelectedAnswer(opt.key)}
-                                    disabled={betPlaced}
+                                    disabled={betPlaced || timeLeft === 0}
                                 >
                                     <span className="option-label">{opt.key}</span>
                                     {opt.text}
@@ -258,7 +305,7 @@ export default function Game() {
                                 <button
                                     className="btn-primary"
                                     onClick={handlePlaceBet}
-                                    disabled={!selectedAnswer || loading}
+                                    disabled={!selectedAnswer || loading || timeLeft === 0}
                                 >
                                     Place Bet
                                 </button>
@@ -273,11 +320,10 @@ export default function Game() {
                                         You bet {betAmount} on {selectedAnswer}
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                        {opponentBet ? (
-                                            <CheckCircle size={16} color="var(--success)" />
-                                        ) : (
-                                            <Circle size={16} color="var(--text-muted)" />
-                                        )}
+                                        {opponentBet
+                                            ? <CheckCircle size={16} color="var(--success)" />
+                                            : <Circle size={16} color="var(--text-muted)" />
+                                        }
                                         {opponentUsername} {opponentBet ? "has bet" : "thinking..."}
                                     </div>
                                 </div>
@@ -289,31 +335,25 @@ export default function Game() {
                 {result && status === "finished" && (
                     <div className="result-box">
                         <h3>
-                            Correct answer: <strong>{result.correct_answer}</strong>
-                            {selectedAnswer === result.correct_answer ? (
-                                <CheckCircle
-                                    size={16}
-                                    color="var(--success)"
-                                    style={{ marginLeft: "8px", display: "inline" }}
-                                />
-                            ) : (
-                                <XCircle
-                                    size={16}
-                                    color="var(--danger)"
-                                    style={{ marginLeft: "8px", display: "inline" }}
-                                />
-                            )}
+                            Correct answer: <strong>
+                                {result.correct_answer} : {options.find(o => o.key === result.correct_answer)?.text}
+                            </strong>
+                            {selectedAnswer === result.correct_answer
+                                ? <CheckCircle size={16} color="var(--success)" style={{ marginLeft: "8px", display: "inline" }} />
+                                : <XCircle size={16} color="var(--danger)" style={{ marginLeft: "8px", display: "inline" }} />
+                            }
                         </h3>
+                        {result.timeout && (
+                            <p style={{ fontSize: 13, color: "var(--danger)", marginBottom: 8 }}>
+                                Time ran out — points deducted automatically.
+                            </p>
+                        )}
                         <div className="result-balances">
-                            <div
-                                className={`result-player ${myBalance >= opponentBalance ? "winner" : "loser"}`}
-                            >
+                            <div className={`result-player ${myBalance >= opponentBalance ? "winner" : "loser"}`}>
                                 <div className="name">{user?.username}</div>
                                 <div className="amount">{myBalance}</div>
                             </div>
-                            <div
-                                className={`result-player ${opponentBalance > myBalance ? "winner" : "loser"}`}
-                            >
+                            <div className={`result-player ${opponentBalance > myBalance ? "winner" : "loser"}`}>
                                 <div className="name">{opponentUsername}</div>
                                 <div className="amount">{opponentBalance}</div>
                             </div>

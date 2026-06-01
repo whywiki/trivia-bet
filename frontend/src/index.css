@@ -322,11 +322,11 @@ body {
 }
 
 .player-balance.you {
-  color: var(--primary);
+  color: #60a5fa;
 }
 
 .player-balance.opponent {
-  color: var(--text-muted);
+  color: #fbbf24;
 }
 
 .question-box {
@@ -503,11 +503,11 @@ body {
 }
 
 .result-player.winner .amount {
-  color: var(--success);
+  color: #60a5fa;
 }
 
 .result-player.loser .amount {
-  color: var(--danger);
+  color: #fbbf24;
 }
 
 /* Game Over */
@@ -547,4 +547,45 @@ body {
 
 .loser-text {
   color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .layout-sidebar {
+    width: 100% !important;
+    flex-direction: row !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 0 !important;
+  }
+
+  .layout-sidebar nav {
+    flex-direction: row !important;
+    padding: 0 12px !important;
+    gap: 4px !important;
+    overflow-x: auto;
+  }
+
+  .layout-sidebar .sidebar-brand {
+    display: none !important;
+  }
+
+  .layout-main {
+    padding: 16px !important;
+  }
+
+  .game-card {
+    padding: 20px !important;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .auth-card {
+    padding: 24px !important;
+  }
+
+  .result-balances {
+    gap: 16px;
+  }
 }

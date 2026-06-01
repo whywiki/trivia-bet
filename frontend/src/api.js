@@ -97,3 +97,82 @@ export async function placeBet(gameId, roundId, chosenAnswer, betAmount) {
   if (!res.ok) throw await res.json();
   return res.json();
 }
+
+export async function updateMe(data) {
+  const res = await fetch(`${BASE_URL}/users/me`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function deleteMe() {
+  const res = await fetch(`${BASE_URL}/users/me`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+}
+
+export async function listGames() {
+  const res = await fetch(`${BASE_URL}/games/`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function deleteGame(gameId) {
+  const res = await fetch(`${BASE_URL}/games/${gameId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+}
+
+export async function listQuestions(category, difficulty) {
+  const params = new URLSearchParams();
+  if (category) params.append("category", category);
+  if (difficulty) params.append("difficulty", difficulty);
+  const res = await fetch(`${BASE_URL}/questions/?${params}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function createQuestion(data) {
+  const res = await fetch(`${BASE_URL}/questions/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function listRounds(gameId) {
+  const res = await fetch(`${BASE_URL}/games/${gameId}/rounds/`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function getBets(gameId, roundId) {
+  const res = await fetch(`${BASE_URL}/games/${gameId}/rounds/${roundId}/bets/`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}
+
+export async function getMyBet(gameId, roundId) {
+  const res = await fetch(`${BASE_URL}/games/${gameId}/rounds/${roundId}/bets/me`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+}

@@ -10,9 +10,7 @@ export function connectSocket(gameId, token, onMessage) {
     socket.close();
   }
 
-  const BASE_WS_URL = import.meta.env.VITE_WS_URL
-    ? `${import.meta.env.VITE_WS_URL}${window.location.host}`
-    : getWsBase();
+  const BASE_WS_URL = import.meta.env.VITE_WS_URL || getWsBase();
 
   socket = new WebSocket(`${BASE_WS_URL}/ws/${gameId}?token=${token}`);
 

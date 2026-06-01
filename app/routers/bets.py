@@ -70,6 +70,9 @@ async def place_bet(
     if bet.bet_amount > game_player.balance:
         raise HTTPException(status_code=409, detail="Insufficient balance")
 
+    if bet.bet_amount < 1:
+        raise HTTPException(status_code=422, detail="Bet amount must be at least 1")
+
     question = db.query(Question).filter(Question.question_id == round_.question_id).first()
     is_correct = bet.chosen_answer.upper() == question.correct_answer.upper()
     payout = bet.bet_amount if is_correct else -bet.bet_amount
@@ -105,11 +108,17 @@ async def place_bet(
             GamePlayer.user_id == game.player_two
         ).first()
 
-        game_over = p1.balance == 0 or p2.balance == 0
+        round_number = db.query(Round).filter(Round.game_id == game_id).count()
+        bankrupt = p1.balance == 0 or p2.balance == 0
+        game_over = bankrupt or round_number >= 10
+
         if game_over:
             game.status = "finished"
             game.ended_at = datetime.utcnow()
-            game.winner_id = game.player_one if p2.balance == 0 else game.player_two
+            if p1.balance == p2.balance:
+                game.winner_id = None
+            else:
+                game.winner_id = game.player_one if p1.balance > p2.balance else game.player_two
 
     db.commit()
     db.refresh(new_bet)
@@ -120,14 +129,8 @@ async def place_bet(
     })
 
     if both_bet:
-        p1 = db.query(GamePlayer).filter(
-            GamePlayer.game_id == game_id,
-            GamePlayer.user_id == game.player_one
-        ).first()
-        p2 = db.query(GamePlayer).filter(
-            GamePlayer.game_id == game_id,
-            GamePlayer.user_id == game.player_two
-        ).first()
+        p1 = db.query(GamePlayer).filter(GamePlayer.game_id == game_id, GamePlayer.user_id == game.player_one).first()
+        p2 = db.query(GamePlayer).filter(GamePlayer.game_id == game_id, GamePlayer.user_id == game.player_two).first()
 
         await manager.broadcast(game_id, {
             "event": "round_finished",
@@ -140,9 +143,12 @@ async def place_bet(
         })
 
         if game.status == "finished":
+            draw = p1.balance == p2.balance
+            bankrupt = p1.balance == 0 or p2.balance == 0
             await manager.broadcast(game_id, {
                 "event": "game_over",
-                "winner_id": game.winner_id
+                "winner_id": game.winner_id,
+                "reason": "draw" if draw else ("bankrupt" if bankrupt else "rounds")
             })
 
     return new_bet

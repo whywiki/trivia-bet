@@ -40,12 +40,13 @@ export default function Dashboard() {
     useEffect(() => {
         async function init() {
             try {
-                const fresh = await getMe();
-                saveAuth(token, fresh);
-                await cancelWaitingGames(token);
-            } catch {
-                clearAuth();
-                navigate("/");
+                await getMe(token);
+            } catch (err) {
+                // Only logout on auth failure, not network errors
+                if (err?.status === 401 || err?.detail === "Could not validate credentials") {
+                    clearAuth();
+                    navigate("/");
+                }
             }
         }
         init();

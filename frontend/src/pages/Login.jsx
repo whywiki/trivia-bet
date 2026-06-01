@@ -1,90 +1,151 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { login, register, getMe } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { Gamepad2, History, User, LogOut, Coins } from "lucide-react";
+import { LogIn, UserPlus, AlertCircle } from "lucide-react";
 
-const navItems = [
-    { to: "/dashboard", icon: Gamepad2, label: "Play" },
-    { to: "/history",   icon: History,  label: "History" },
-    { to: "/profile",   icon: User,     label: "Profile" },
-];
+export default function Login() {
+    const [tab, setTab] = useState("login");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-export default function Layout() {
-    const { user, clearAuth } = useAuth();
+    const { token, user, saveAuth, clearAuth } = useAuth();
     const navigate = useNavigate();
 
-    function handleLogout() {
-        clearAuth();
-        navigate("/");
+    useEffect(() => {
+        async function checkExistingSession() {
+            if (token && user) {
+                navigate("/dashboard");
+                return;
+            }
+            if (token && !user) {
+                try {
+                    const fresh = await getMe(token);
+                    saveAuth(token, fresh);
+                    navigate("/dashboard");
+                } catch {
+                    clearAuth();
+                }
+            }
+        }
+        checkExistingSession();
+    }, []);
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+            const data = await login(username, password);
+            const user = await getMe(data.access_token);
+            saveAuth(data.access_token, user);
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.detail || "Login failed");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+        try {
+            await register(username, email, password);
+            const data = await login(username, password);
+            const user = await getMe(data.access_token);
+            saveAuth(data.access_token, user);
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.detail || "Registration failed");
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", flexDirection: "row" }}>
-            {/* Sidebar */}
-            <aside className="layout-sidebar" style={{
-                width: 220,
-                background: "var(--surface)",
-                borderRight: "1px solid var(--border)",
-                display: "flex",
-                flexDirection: "column",
-                padding: "24px 0",
-                flexShrink: 0,
-            }}>
-                <div className="sidebar-brand" style={{ padding: "0 20px 24px", borderBottom: "1px solid var(--border)" }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "var(--primary)", marginBottom: 4 }}>
-                        Trivia Bet
-                    </div>
-                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{user?.username}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6, color: "var(--primary)", fontSize: 13 }}>
-                        <Coins size={13} />
-                        <span style={{ fontWeight: 600 }}>{user?.balance}</span>
-                    </div>
-                </div>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h1 className="auth-title">Trivia Bet</h1>
+                <p className="auth-subtitle">Answer questions. Win tokens. Destroy your friend.</p>
 
-                <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
-                    {navItems.map(({ to, icon: Icon, label }) => (
-                        <NavLink
-                            key={to}
-                            to={to}
-                            style={({ isActive }) => ({
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                padding: "10px 12px",
-                                borderRadius: "var(--radius)",
-                                textDecoration: "none",
-                                fontSize: 14,
-                                fontWeight: isActive ? 600 : 400,
-                                color: isActive ? "var(--primary)" : "var(--text-muted)",
-                                background: isActive ? "rgba(108,99,255,0.12)" : "transparent",
-                                transition: "all 0.15s",
-                            })}
-                        >
-                            <Icon size={17} />
-                            {label}
-                        </NavLink>
-                    ))}
-                </nav>
-
-                <div style={{ padding: "0 12px" }}>
+                <div className="tab-row">
                     <button
-                        onClick={handleLogout}
-                        style={{
-                            display: "flex", alignItems: "center", gap: 10,
-                            padding: "10px 12px", width: "100%",
-                            background: "none", border: "none", borderRadius: "var(--radius)",
-                            cursor: "pointer", fontSize: 14, color: "var(--text-muted)",
-                        }}
+                        className={`tab-btn ${tab === "login" ? "active" : ""}`}
+                        onClick={() => { setTab("login"); setError(null); }}
                     >
-                        <LogOut size={17} />
-                        Logout
+                        <LogIn size={16} />
+                        Login
+                    </button>
+                    <button
+                        className={`tab-btn ${tab === "register" ? "active" : ""}`}
+                        onClick={() => { setTab("register"); setError(null); }}
+                    >
+                        <UserPlus size={16} />
+                        Register
                     </button>
                 </div>
-            </aside>
 
-            {/* Main content */}
-            <main className="layout-main" style={{ flex: 1, overflowY: "auto", padding: "32px 28px" }}>
-                <Outlet />
-            </main>
+                <form onSubmit={tab === "login" ? handleLogin : handleRegister}>
+                    <div className="field">
+                        <label>Username</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter username"
+                            required
+                            minLength={3}
+                            maxLength={32}
+                        />
+                    </div>
+
+                    {tab === "register" && (
+                        <div className="field">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Enter email"
+                                required
+                            />
+                        </div>
+                    )}
+
+                    <div className="field">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter password"
+                            required
+                            minLength={tab === "register" ? 8 : 1}
+                        />
+                        {tab === "register" && (
+                            <span style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4, display: "block" }}>
+                                Minimum 8 characters
+                            </span>
+                        )}
+                    </div>
+
+                    {error && (
+                        <div className="error-box">
+                            <AlertCircle size={16} />
+                            {error}
+                        </div>
+                    )}
+
+                    <button type="submit" className="btn-primary" disabled={loading}>
+                        {loading ? "Please wait..." : tab === "login" ? "Login" : "Create Account"}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }

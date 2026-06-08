@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createGame, joinGame, getMe } from "../api";
+import { createGame, joinGame, getMe, listGames } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { connectSocket, disconnectSocket } from "../socket";
 import { Copy, Check, Users, Swords } from "lucide-react";
@@ -38,19 +38,25 @@ export default function Dashboard() {
     const [gameId, setGameId] = useState(null);
 
     useEffect(() => {
-        async function init() {
-            try {
-                await getMe(token);
-            } catch (err) {
-                // Only logout on auth failure, not network errors
-                if (err?.status === 401 || err?.detail === "Could not validate credentials") {
-                    clearAuth();
-                    navigate("/");
-                }
+    async function init() {
+        try {
+            const fresh = await getMe();
+            saveAuth(token, fresh);
+            // check for existing waiting game
+            const games = await listGames();
+            const waiting = games.find(g => g.status === "waiting" && g.player_one === fresh.user_id);
+            if (waiting) {
+                setRoomCode(waiting.room_code);
+                setGameId(waiting.game_id);
+                setMode("create");
             }
+        } catch {
+            clearAuth();
+            navigate("/");
         }
-        init();
-    }, []);
+    }
+    init();
+}, []);
 
     useEffect(() => {
         if (!gameId || !token) return;

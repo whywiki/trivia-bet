@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { createRound, placeBet, getGame, getUser } from "../api";
+import { createRound, placeBet, getGame, getUser, quitGame } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { connectSocket, disconnectSocket } from "../socket";
 import { Coins, Circle, CheckCircle, XCircle } from "lucide-react";
@@ -32,7 +32,6 @@ export default function Game() {
 
     const myUserId = user?.user_id;
 
-    // Start countdown when a new round begins (timeLeft resets to 10)
     useEffect(() => {
         if (timeLeft === null) return;
         clearInterval(timerRef.current);
@@ -49,7 +48,7 @@ export default function Game() {
         }, 1000);
 
         return () => clearInterval(timerRef.current);
-    }, [timeLeft === 10]); // only re-run when round resets to 10
+    }, [timeLeft === 10]);
 
     useEffect(() => {
         if (!gameId || !token) return;
@@ -96,7 +95,7 @@ export default function Game() {
                 setResult(null);
                 setError(null);
                 setStatus("playing");
-                setTimeLeft(10); // starts the countdown
+                setTimeLeft(10);
                 break;
 
             case "bet_placed":
@@ -168,6 +167,15 @@ export default function Game() {
         }
     }
 
+    async function handleQuit() {
+        if (!window.confirm("Are you sure you want to quit? Your opponent wins automatically.")) return;
+        try {
+            await quitGame(gameId);
+        } catch (err) {
+            setError(err.detail || "Failed to quit game");
+        }
+    }
+
     const options = question
         ? [
             { key: "A", text: question.option_a },
@@ -189,9 +197,9 @@ export default function Game() {
     return (
         <div className="game-container">
             <div className="game-card">
+
                 <div className="game-header">
                     <h2>Game Room</h2>
-
                     <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
                         {roundNumber && (
                             <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600 }}>
@@ -211,7 +219,6 @@ export default function Game() {
                             </div>
                         )}
                     </div>
-
                     <div className="balances">
                         <div className="player-balance you">
                             <Coins size={14} />
@@ -223,6 +230,28 @@ export default function Game() {
                         </div>
                     </div>
                 </div>
+
+                {(status === "playing" || status === "ready" || status === "finished") && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+                        <button
+                            onClick={handleQuit}
+                            style={{
+                                background: "none",
+                                border: "1px solid var(--danger)",
+                                color: "var(--danger)",
+                                borderRadius: "var(--radius)",
+                                padding: "6px 14px",
+                                cursor: "pointer",
+                                fontSize: 13,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                            }}
+                        >
+                            🏳 Quit Game
+                        </button>
+                    </div>
+                )}
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: "16px" }}>
@@ -345,7 +374,7 @@ export default function Game() {
                         </h3>
                         {result.timeout && (
                             <p style={{ fontSize: 13, color: "var(--danger)", marginBottom: 8 }}>
-                                Time ran out — points deducted automatically.
+                                Time ran out! Points deducted automatically.
                             </p>
                         )}
                         <div className="result-balances">
@@ -360,6 +389,7 @@ export default function Game() {
                         </div>
                     </div>
                 )}
+
             </div>
         </div>
     );

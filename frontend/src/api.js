@@ -176,3 +176,12 @@ export async function getMyBet(gameId, roundId) {
   if (!res.ok) throw await res.json();
   return res.json();
 }
+
+export async function quitGame(gameId) {
+    const res = await fetch(`${BASE_URL}/games/${gameId}/quit`, {
+        method: "PUT",
+        headers: authHeaders(),
+    });
+    if (!res.ok) throw await res.json();
+    return res.json();
+}

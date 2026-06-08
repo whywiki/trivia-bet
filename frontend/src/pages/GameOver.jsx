@@ -25,14 +25,18 @@ export default function GameOver() {
 
                 <p>
                     {draw
-                        ? "Both players finished with the same amount of points."
+                        ? "Both players finished with the same amount of tokens."
                         : won
-                            ? reason === "bankrupt"
-                                ? "Your opponent ran out of points. Well played."
-                                : "You had the most points. Well played."
-                            : reason === "bankrupt"
-                                ? "You ran out of points."
-                                : "Your opponent had the most points."
+                            ? reason === "quit"
+                                ? `${opponentUsername} quit the game.`
+                                : reason === "bankrupt"
+                                    ? "Your opponent ran out of tokens. Well played."
+                                    : "You had more tokens after 10 rounds. Well played."
+                            : reason === "quit"
+                                ? "You quit the game."
+                                : reason === "bankrupt"
+                                    ? "You ran out of tokens."
+                                    : "Your opponent had more tokens after 10 rounds."
                     }
                 </p>
 

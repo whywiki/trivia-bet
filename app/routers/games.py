@@ -10,6 +10,7 @@ from app.schemas.game import GameCreate, GameResponse
 from app.auth import get_current_user
 from app.models.user import User
 from app.websocket_manager import manager
+from datetime import datetime
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -126,3 +127,32 @@ def delete_game(
         raise HTTPException(status_code=409, detail="Cannot delete an active game")
     db.delete(game)
     db.commit()
+
+@router.put("/{game_id}/quit", status_code=200)
+async def quit_game(
+    game_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    game = db.query(Game).filter(Game.game_id == game_id).first()
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if game.player_one != current_user.user_id and game.player_two != current_user.user_id:
+        raise HTTPException(status_code=403, detail="You are not a participant in this game")
+    if game.status != "active":
+        raise HTTPException(status_code=409, detail="Game is not active")
+
+    winner_id = game.player_two if game.player_one == current_user.user_id else game.player_one
+    game.status = "finished"
+    game.ended_at = datetime.utcnow()
+    game.winner_id = winner_id
+    db.commit()
+
+    await manager.broadcast(game_id, {
+        "event": "game_over",
+        "winner_id": winner_id,
+        "reason": "quit",
+        "quitter_id": current_user.user_id
+    })
+
+    return {"message": "Game quit"}

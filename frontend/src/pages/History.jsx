@@ -95,7 +95,9 @@ function GameCard({ game, userId }) {
                 {finished
                     ? won
                         ? <Trophy size={18} color="var(--success)" />
-                        : <Skull size={18} color="var(--danger)" />
+                        : game.winner_id === null
+                            ? <Trophy size={18} color="#fbbf24" />
+                            : <Skull size={18} color="var(--danger)" />
                     : <Clock size={18} color="#f59e0b" />
                 }
                 <div style={{ flex: 1 }}>
@@ -106,8 +108,8 @@ function GameCard({ game, userId }) {
                     {game.status}
                 </span>
                 {finished && (
-                    <span style={{ fontSize: 12, color: won ? "var(--success)" : "var(--danger)", fontWeight: 600 }}>
-                        {won ? "Won" : "Lost"}
+                    <span style={{ fontSize: 12, color: won ? "var(--success)" : game.winner_id === null ? "#fbbf24" : "var(--danger)", fontWeight: 600 }}>
+                        {won ? "Won" : game.winner_id === null ? "Draw" : "Lost"}
                     </span>
                 )}
                 {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -144,7 +146,7 @@ export default function History() {
         <div>
             <h2 style={{ marginBottom: 8 }}>Game History</h2>
             <p style={{ color: "var(--text-muted)", marginBottom: 32, fontSize: 14 }}>
-                All your games — click any to expand rounds and bets.
+                All your games, click any to expand rounds and bets.
             </p>
 
             {error && <div className="error-box">{error}</div>}

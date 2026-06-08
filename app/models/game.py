@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from app.database import Base
+from datetime import datetime
 
 class Game(Base):
     __tablename__ = "games"

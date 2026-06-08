@@ -49,6 +49,8 @@ export default function Login() {
             } else {
                 setError(err.detail || "Login failed");
             }
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -68,6 +70,8 @@ export default function Login() {
             } else {
                 setError(err.detail || "Registration failed");
             }
+        } finally {
+            setLoading(false);
         }
     }
 

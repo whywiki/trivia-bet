@@ -20,7 +20,6 @@ export function connectSocket(gameId, token, onMessage) {
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log("WebSocket event:", data);
     onMessage(data);
   };
 

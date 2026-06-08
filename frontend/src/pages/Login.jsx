@@ -44,9 +44,11 @@ export default function Login() {
             saveAuth(data.access_token, user);
             navigate("/dashboard");
         } catch (err) {
-            setError(err.detail || "Login failed");
-        } finally {
-            setLoading(false);
+            if (Array.isArray(err.detail)) {
+                setError(err.detail.map(e => e.msg).join(", "));
+            } else {
+                setError(err.detail || "Login failed");
+            }
         }
     }
 
@@ -61,9 +63,11 @@ export default function Login() {
             saveAuth(data.access_token, user);
             navigate("/dashboard");
         } catch (err) {
-            setError(err.detail || "Registration failed");
-        } finally {
-            setLoading(false);
+            if (Array.isArray(err.detail)) {
+                setError(err.detail.map(e => e.msg).join(", "));
+            } else {
+                setError(err.detail || "Registration failed");
+            }
         }
     }
 

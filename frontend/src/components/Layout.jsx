@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Gamepad2, History, User, LogOut, Coins } from "lucide-react";
+import { Gamepad2, History, User, LogOut, Coins, BookOpen } from "lucide-react";
 
 const navItems = [
     { to: "/dashboard", icon: Gamepad2, label: "Play" },
     { to: "/history",   icon: History,  label: "History" },
+    { to: "/questions", icon: BookOpen, label: "Questions" },
     { to: "/profile",   icon: User,     label: "Profile" },
 ];
 
@@ -18,9 +19,9 @@ export default function Layout() {
     }
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", flexDirection: "row" }}>
+        <div className="layout-wrapper" style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", flexDirection: "row" }}>
             {/* Sidebar */}
-            <aside className="layout-sidebar" style={{
+           <aside className="layout-sidebar" style={{
                 width: 220,
                 background: "var(--surface)",
                 borderRight: "1px solid var(--border)",

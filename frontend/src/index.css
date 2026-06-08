@@ -589,3 +589,73 @@ body {
     gap: 16px;
   }
 }
+
+@media (max-width: 640px) {
+  .layout-wrapper {
+    flex-direction: column !important;
+  }
+
+  .layout-sidebar {
+    width: 100% !important;
+    flex-direction: row !important;
+    padding: 0 !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .sidebar-brand {
+    display: none !important;
+  }
+
+  .layout-sidebar nav {
+    flex-direction: row !important;
+    padding: 8px 12px !important;
+    gap: 4px !important;
+    flex: 1 !important;
+    overflow-x: auto;
+  }
+
+  .layout-sidebar nav a {
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 11px !important;
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    min-width: 60px;
+  }
+
+  .layout-sidebar > div:last-child {
+    display: none !important;
+  }
+
+  .layout-main {
+    padding: 16px !important;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .game-card {
+    padding: 16px !important;
+  }
+
+  .game-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .auth-card {
+    padding: 24px 16px !important;
+  }
+
+  .bet-row {
+    flex-wrap: wrap;
+  }
+
+  .bet-row input {
+    width: 100%;
+  }
+}

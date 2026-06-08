@@ -139,13 +139,13 @@ export default function Dashboard() {
                         <div style={{ display: "flex", gap: 8 }}>
                             <input
                                 type="text"
-                                placeholder="Room code"
+                                placeholder=" Room code"
                                 value={joinCode}
                                 onChange={e => setJoinCode(e.target.value.toUpperCase())}
                                 maxLength={6}
                                 required
                                 pattern="[A-Z0-9]{6}"
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, borderRadius: "var(--radius)" }}
                             />
                             <button
                                 className="btn-primary"

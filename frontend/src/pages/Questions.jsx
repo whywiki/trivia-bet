@@ -103,9 +103,6 @@ export default function Questions() {
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-          <button onClick={() => navigate("/dashboard")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex" }}>
-            <ArrowLeft size={20} />
-          </button>
           <h2 style={{ margin: 0, flex: 1 }}>Questions</h2>
           <button
             className="btn-primary"
@@ -217,32 +214,44 @@ export default function Questions() {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 24 }}>
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              style={{ background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 10px", cursor: page === 1 ? "not-allowed" : "pointer", color: page === 1 ? "var(--text-muted)" : "var(--text)", display: "flex" }}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-              <button
-                key={n}
-                onClick={() => setPage(n)}
-                style={{ background: n === page ? "var(--accent)" : "none", color: n === page ? "#fff" : "var(--text)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 12px", cursor: "pointer", fontWeight: n === page ? 600 : 400, minWidth: 36 }}
-              >
-                {n}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              style={{ background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 10px", cursor: page === totalPages ? "not-allowed" : "pointer", color: page === totalPages ? "var(--text-muted)" : "var(--text)", display: "flex" }}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 24, flexWrap: "wrap" }}>
+    <button
+      onClick={() => setPage(p => Math.max(1, p - 1))}
+      disabled={page === 1}
+      style={{ background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 10px", cursor: page === 1 ? "not-allowed" : "pointer", color: page === 1 ? "var(--text-muted)" : "var(--text)", display: "flex" }}
+    >
+      <ChevronLeft size={16} />
+    </button>
+    {Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 1)
+      .reduce((acc, n, idx, arr) => {
+        if (idx > 0 && n - arr[idx - 1] > 1) acc.push("...");
+        acc.push(n);
+        return acc;
+      }, [])
+      .map((n, idx) =>
+        n === "..." ? (
+          <span key={`ellipsis-${idx}`} style={{ color: "var(--text-muted)", padding: "0 4px", fontSize: 14 }}>…</span>
+        ) : (
+          <button
+            key={n}
+            onClick={() => setPage(n)}
+            style={{ background: n === page ? "var(--primary)" : "none", color: n === page ? "#fff" : "var(--text)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 12px", cursor: "pointer", fontWeight: n === page ? 600 : 400, minWidth: 36 }}
+          >
+            {n}
+          </button>
+        )
+      )
+    }
+    <button
+      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+      disabled={page === totalPages}
+      style={{ background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "6px 10px", cursor: page === totalPages ? "not-allowed" : "pointer", color: page === totalPages ? "var(--text-muted)" : "var(--text)", display: "flex" }}
+    >
+      <ChevronRight size={16} />
+    </button>
+  </div>
+)}
 
       </div>
     </div>

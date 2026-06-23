@@ -2,7 +2,7 @@
   
 # Trivia Bet
  
-[![Python](https://img.shields.io/badge/Python-3.12-4FC3F7?style=for-the-badge&labelColor=2D2D2D&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.14-4FC3F7?style=for-the-badge&labelColor=2D2D2D&logo=python&logoColor=white)](https://python.org)
 &nbsp;&nbsp;
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-00D4AA?style=for-the-badge&labelColor=2D2D2D&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 &nbsp;&nbsp;
@@ -10,7 +10,7 @@
 &nbsp;&nbsp;
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&labelColor=2D2D2D&logo=docker&logoColor=white)](https://docker.com)
  
-A real-time two-player trivia betting game. Players answer questions and bet tokens on their answers. The game ends when one player reaches 0 tokens, or after 10 rounds — whoever has more tokens wins.
+A real-time two-player trivia betting game. Players answer questions and bet tokens on their answers. The game ends when one player reaches 0 tokens, or after 10 rounds - whoever has more tokens wins.
  
 </div>
 

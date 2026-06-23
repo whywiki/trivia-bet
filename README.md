@@ -1,6 +1,26 @@
+<div align="center">
+  
 # Trivia Bet
-
+ 
+[![Python](https://img.shields.io/badge/Python-3.12-4FC3F7?style=for-the-badge&labelColor=2D2D2D&logo=python&logoColor=white)](https://python.org)
+&nbsp;&nbsp;
+[![FastAPI](https://img.shields.io/badge/FastAPI-Latest-00D4AA?style=for-the-badge&labelColor=2D2D2D&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+&nbsp;&nbsp;
+[![React](https://img.shields.io/badge/React-Latest-61DAFB?style=for-the-badge&labelColor=2D2D2D&logo=react&logoColor=white)](https://react.dev)
+&nbsp;&nbsp;
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&labelColor=2D2D2D&logo=sqlite&logoColor=white)](https://sqlite.org)
+&nbsp;&nbsp;
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&labelColor=2D2D2D&logo=docker&logoColor=white)](https://docker.com)
+ 
 A real-time two-player trivia betting game. Players answer questions and bet tokens on their answers. The game ends when one player reaches 0 tokens, or after 10 rounds — whoever has more tokens wins.
+ 
+</div>
+
+<br>
+
+![Trivia Bet UI](assets/trivia.png)
+ 
+---
 
 ## Tech Stack
 
